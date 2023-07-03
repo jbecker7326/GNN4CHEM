@@ -1,0 +1,8 @@
+name: gnn4chem
+channels:
+  - defaults
+dependencies:
+  - python=3.9
+  - numpy
+  - matplotlib
+  - pyyaml=5.4.1
