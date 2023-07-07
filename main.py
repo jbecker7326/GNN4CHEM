@@ -16,7 +16,7 @@ def main():
     in_channels = batch.x.shape[1]
     out_channels = dataset.num_classes
 
-    # train(train_loader, num_epochs, in_channels, out_channels, lr)
+    train(train_loader, num_epochs, in_channels, out_channels, lr)
     test(test_dataset, test_loader, in_channels, out_channels)
 if __name__ == '__main__':
     main()
