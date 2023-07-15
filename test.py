@@ -1,6 +1,11 @@
 import metrics
 import torch
 from models import GNN_my_model
+import networkx as nx
+import numpy as np
+from IPython.display import HTML
+from matplotlib import animation
+from torch_geometric.utils import to_networkx
 
 def test(test_dataset, test_loader, in_channels, out_channels):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
