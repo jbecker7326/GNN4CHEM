@@ -7,10 +7,10 @@ from IPython.display import HTML
 from matplotlib import animation
 from torch_geometric.utils import to_networkx
 
-def test(test_dataset, test_loader, in_channels, out_channels):
+def test(test_loader, in_channels, out_channels, num_epochs, lr):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = GNN_my_model.GCNConvNet(in_channels=in_channels, out_channels=out_channels)
-    model.load_state_dict(torch.load("model_state/GCN_WW.pth")) #path to load the model
+    model.load_state_dict(torch.load(f"model_state/GCN_WW_lr_{lr}_epoch_{num_epochs}.pth")) #path to load the model
     model.to(device)
     model.eval()
     predictions = torch.Tensor()
@@ -26,7 +26,7 @@ def test(test_dataset, test_loader, in_channels, out_channels):
     predictions = predictions.numpy().flatten()
 
 
-    loss = metrics.get_mse(labels, predictions)
+    mse_loss = metrics.get_mse(labels, predictions)
     acc = metrics.get_accuracy(labels, predictions, 0.5)
     prec = metrics.precision(labels, predictions, 0.5)
     sensitivity = metrics.sensitivity(labels, predictions,  0.5)
@@ -37,7 +37,7 @@ def test(test_dataset, test_loader, in_channels, out_channels):
     auprc = metrics.auprc(labels, predictions)
 
 
-    print(f'loss : {loss}')
+    print(f'MSE loss : {mse_loss}')
     print(f'Accuracy : {acc}')
     print(f'precision: {prec}')
     print(f'Sensititvity :{sensitivity}')

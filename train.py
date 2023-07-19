@@ -4,10 +4,10 @@ from models import GNN_my_model
 import matplotlib.pyplot as plt
 import metrics
 
-def train(train_loader, num_epochs, in_channels, out_channels, lr, val_loader, print=False):
+def train(train_loader, num_epochs, in_channels, out_channels, lr, val_loader, debug=False):
     # model training
     model = GNN_my_model.GCNConvNet(in_channels=in_channels, out_channels=out_channels)
-    loss_fn = torch.nn.BCEWithLogitsLoss()
+    loss_fn = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     my_device = "cuda" if torch.cuda.is_available() else "cpu"
     model = model.to(my_device)
@@ -33,7 +33,7 @@ def train(train_loader, num_epochs, in_channels, out_channels, lr, val_loader, p
             loss = loss_fn(pred, batch.y.to(my_device))
             loss.backward()
             optimizer.step()
-            total_loss += loss.detach()
+            total_loss += loss.item()
             batch_count += 1
             f_total += metrics.f_score(batch.y.to(my_device).numpy().flatten(), pred.detach().numpy().flatten(), 0.5)
         mean_loss = total_loss / batch_count
@@ -41,7 +41,7 @@ def train(train_loader, num_epochs, in_channels, out_channels, lr, val_loader, p
         losses.append(mean_loss)
         epochs.append(epoch)
         f_score.append(mean_f1)
-        if print:
+        if debug:
             print(f"train loss at epoch {epoch} = {mean_loss}")
             print(f"train mean f1 score at epoch {epoch} = {mean_f1}")
         # validation
@@ -61,7 +61,7 @@ def train(train_loader, num_epochs, in_channels, out_channels, lr, val_loader, p
         val_epochs.append(epoch)
         val_f_score.append(mean_f1)
         time_elapsed.append(time.time()-t0)
-        if print:
+        if debug:
             print(f"validation loss at epoch {epoch} = {mean_loss}")
             print(f"validation mean f1 score at epoch {epoch} = {mean_f1}")
 
@@ -72,5 +72,5 @@ def train(train_loader, num_epochs, in_channels, out_channels, lr, val_loader, p
     plt.xlabel('epoch')
     plt.ylabel('mean loss')
     plt.savefig('GCN_mean_loss.png')
-    torch.save(model.state_dict(), "model_state/GCN_WW.pth")
+    torch.save(model.state_dict(), f"model_state/GCN_WW_lr_{lr}_epoch_{num_epochs}.pth")
 
