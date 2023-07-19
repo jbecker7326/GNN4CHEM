@@ -94,7 +94,7 @@ def specificity(actual, predicted, threshold):
 
 # f1 score  = 2 / ((1/ precision) + (1/recall))
 def f_score(actual, predicted, threshold):
-    f_sc = 2 / ((1 / precision(actual, predicted, threshold)) + (1 / sensitivity(actual, predicted, threshold)))
+    f_sc = 2 / ((1 / precision(actual, predicted, threshold)) + (1 / sensitivity(actual, predicted, threshold))) * 100
     return f_sc
 
 
