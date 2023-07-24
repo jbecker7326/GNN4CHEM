@@ -1,18 +1,21 @@
 import metrics
 import torch
-from models import GNN_my_model
+from models import GNN_my_model, GNN_GS
 import networkx as nx
 import numpy as np
 from IPython.display import HTML
 from matplotlib import animation
 from torch_geometric.utils import to_networkx
+from torchmetrics import F1Score
 
 def test(test_loader, in_channels, out_channels, num_epochs, lr):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # model = GNN_GS.GSage(in_channels=in_channels, out_channels=out_channels)
     model = GNN_my_model.GCNConvNet(in_channels=in_channels, out_channels=out_channels)
-    model.load_state_dict(torch.load(f"model_state/GCN_WW_lr_{lr}_epoch_{num_epochs}.pth")) #path to load the model
+    model.load_state_dict(torch.load(f"model_state/ysl_{lr}_epoch_{num_epochs}.pth")) #path to load the model
     model.to(device)
     model.eval()
+    f1 = F1Score(task="multilabel", num_labels = out_channels).to(device)
     predictions = torch.Tensor()
     labels = torch.Tensor()
 

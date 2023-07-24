@@ -3,7 +3,7 @@ from torch_geometric import datasets
 from train import train
 from test import test
 def main():
-    num_epochs = 10
+    num_epochs = 500
     lr = 1e-3
     train_dataset = datasets.PPI(root="./data", split="train")
     train_dataset.shuffle()
