@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 from torch_geometric.nn import SAGEConv
 
-class GSage(nn.Module):
+class GCNConvNet(nn.Module):
 
     def __init__(self, in_channels=3, out_channels=6):
-        super(GSage, self).__init__()
+        super(GCNConvNet, self).__init__()
 
         self.conv1 = SAGEConv(in_channels, out_channels=128, aggr="max")
         self.conv2 = SAGEConv(in_channels=128, out_channels=128, aggr="max")
