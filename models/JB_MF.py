@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 from torch_geometric.nn import MFConv
 
-class JB_MF2(nn.Module):
+class GCNConvNet(nn.Module):
     def __init__(self, in_channels=3, out_channels=6):
-        super(MF2, self).__init__()
+        super(GCNConvNet, self).__init__()
         self.conv1 = MFConv(in_channels, 4*in_channels, alpha=0.95)
         self.seq1 = nn.Sequential(nn.BatchNorm1d(4 * in_channels),
                           nn.ReLU(),
