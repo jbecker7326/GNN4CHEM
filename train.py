@@ -1,81 +1,73 @@
 import time
 import torch
-from models import GNN_my_model, GNN_GS
-import matplotlib.pyplot as plt
 import metrics
+#import torchaudio
 from torchmetrics import F1Score
+import numpy as np
 
-def train(train_loader, num_epochs, in_channels, out_channels, lr, val_loader, debug=False):
-    # model training
-    # model = GNN_GS.GSage(in_channels=in_channels, out_channels=out_channels)
-    model = GNN_my_model.GCNConvNet(in_channels=in_channels, out_channels=out_channels)
+def train(model, device, train_loader, val_loader, in_channels, out_channels, num_epochs, lr, debug=False):
     loss_fn = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    my_device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = model.to(my_device)
-    f1 = F1Score(task="multilabel", num_labels = out_channels).to(my_device)
-    losses = []
-    f_score = []
-    val_losses = []
-    val_f_score = []
-    time_elapsed = []
-    epochs = []
-    val_epochs = []
-    t0 = time.time()
+    model = model.to(device)
+    f1 = F1Score(task="multilabel", num_labels = out_channels).to(device)
+
+    losses, f_score, val_losses, val_f_score = [], [], [], []
+    t0, time_elapsed = time.time(), []
+    
     for epoch in range(num_epochs):
-        print(f'epoch {len(losses)}')
-        total_loss = 0.0
-        batch_count = 0
-        f_total = 0
-        val_f_total = 0
-        val_total_loss = 0
-        val_batch_count = 0
+        total_loss, batch_count, f_total = 0, 0, 0
+        val_total_loss, val_batch_count, val_f_total = 0, 0, 0
+
         # training
         for batch in train_loader:
             optimizer.zero_grad()
-            pred = model(batch.to(my_device))
-            loss = loss_fn(pred, batch.y.to(my_device))
+            pred = model(batch.to(device))
+            loss = loss_fn(pred, batch.y.to(device))
             loss.backward()
             optimizer.step()
+            
             total_loss += loss.item()
             batch_count += 1
             f_total += f1(pred, batch.y)
-            # f_total += metrics.f_score(batch.y.to(my_device).numpy().flatten(), pred.detach().numpy().flatten(), 0.5)
+         
         mean_loss = total_loss / batch_count
         mean_f1 = f_total / batch_count
         losses.append(mean_loss)
-        epochs.append(epoch)
         f_score.append(mean_f1)
+        
         if debug:
             print(f"train loss at epoch {epoch} = {mean_loss}")
             print(f"train mean f1 score at epoch {epoch} = {mean_f1}")
+            
         # validation
         model.eval()
         with torch.no_grad():
             for batch in val_loader:
-                batch = batch.to(my_device)
-                output = model(batch.to(my_device))
-                loss = loss_fn(output, batch.y.to(my_device))
+                batch = batch.to(device)
+                output = model(batch.to(device))
+                loss = loss_fn(output, batch.y.to(device))
                 val_total_loss += loss.item()
                 val_batch_count += 1
-                val_f_total += metrics.f_score(batch.y.to(my_device).numpy().flatten(), output.detach().numpy().flatten(),
-                                           0.5)
-        mean_loss = val_total_loss / val_batch_count
-        mean_f1 = val_f_total / val_batch_count
-        val_losses.append(mean_loss)
-        val_epochs.append(epoch)
-        val_f_score.append(mean_f1)
+                val_f_total += f1(output,batch.y)
+    
+        val_mean_loss = val_total_loss / val_batch_count
+        val_mean_f1 = val_f_total / val_batch_count
+        val_losses.append(val_mean_loss)
+        val_f_score.append(val_mean_f1)
         time_elapsed.append(time.time()-t0)
+        
         if debug:
-            print(f"validation loss at epoch {epoch} = {mean_loss}")
-            print(f"validation mean f1 score at epoch {epoch} = {mean_f1}")
+            print(f"validation loss at epoch {epoch} = {val_mean_loss}")
+            print(f"validation mean f1 score at epoch {epoch} = {val_mean_f1}")
+
+    # run statistics
+    stats = [mean_loss, mean_f1, val_mean_loss, val_mean_f1, time_elapsed[-1]]
+
+    # add cuda to statistics if used
+    if device == 'cuda':
+        stats = stats + [torch.cuda.memory_allocated(0), torch.cuda.memory_reserved(0)]
+    else:
+        stats = stats + [np.nan, np.nan]
 
 
-    plt.plot(losses)
-    plt.plot(val_losses)
-    plt.legend(['train', 'validation'], loc='upper left')
-    plt.xlabel('epoch')
-    plt.ylabel('mean loss')
-    plt.savefig('GS_mean_loss.png')
-    torch.save(model.state_dict(), f"model_state/ysl_{lr}_epoch_{num_epochs}.pth")
-
+    return model, losses, val_losses, stats

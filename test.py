@@ -1,51 +1,47 @@
 import metrics
 import torch
-from models import GNN_my_model, GNN_GS
-import networkx as nx
+#import networkx as nx
 import numpy as np
-from IPython.display import HTML
-from matplotlib import animation
-from torch_geometric.utils import to_networkx
-from torchmetrics import F1Score
+#from IPython.display import HTML
+#from matplotlib import animation
+#from torch_geometric.utils import to_networkx
+from torchmetrics import F1Score, Accuracy, Precision, Specificity, Recall, MatthewsCorrCoef, MeanSquaredError, AUROC, PrecisionAtFixedRecall, AveragePrecision
 
-def test(test_loader, in_channels, out_channels, num_epochs, lr):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # model = GNN_GS.GSage(in_channels=in_channels, out_channels=out_channels)
-    model = GNN_my_model.GCNConvNet(in_channels=in_channels, out_channels=out_channels)
-    model.load_state_dict(torch.load(f"model_state/ysl_{lr}_epoch_{num_epochs}.pth")) #path to load the model
+def test(model, device, test_loader, out_channels, debug=False):
     model.to(device)
     model.eval()
-    f1 = F1Score(task="multilabel", num_labels = out_channels).to(device)
-    predictions = torch.Tensor()
-    labels = torch.Tensor()
-
+    predictions = torch.Tensor().to(device)
+    labels = torch.Tensor().to(device)
+    
     with torch.no_grad():
         for batch in test_loader:
           batch = batch.to(device)
           output = model(batch.to(device))
-          predictions = torch.cat((predictions, output.cpu()), 0)
+          predictions = torch.cat((predictions, output.to(device)), 0)
           labels = torch.cat((labels, batch.y.to(device)), 0)
-    labels = labels.numpy().flatten()
-    predictions = predictions.numpy().flatten()
+    
+    f1score = F1Score(task="multilabel", num_labels = out_channels).to(device)
+    msescore = MeanSquaredError().to(device)
+    accuracy = Accuracy(task="multilabel", num_labels = out_channels).to(device)
+    precision = Precision(task="multilabel", num_labels = out_channels).to(device)
+    specificity = Specificity(task="multilabel", num_labels = out_channels).to(device)
+    sensitivity = Recall(task="multilabel", num_labels = out_channels).to(device)
+    #matthews_corrcoef = MatthewsCorrCoef(task="multilabel", num_labels = out_channels).to(device)
+    auroc = AUROC(task="multilabel", num_labels = out_channels).to(device)
+    auprc = AveragePrecision(task="multilabel", num_labels = out_channels).to(device)
 
+    #stats = [msescore(predictions, labels), accuracy(predictions, labels), precision(predictions, labels), sensitivity(predictions, labels), specificity(predictions, labels), f1score(predictions, labels), matthews_corrcoef(predictions, labels), auroc(predictions, labels.int()), auprc(predictions, labels.int())]
+    stats = [msescore(predictions, labels), accuracy(predictions, labels), precision(predictions, labels), sensitivity(predictions, labels), specificity(predictions, labels), f1score(predictions, labels), auroc(predictions, labels.int()), auprc(predictions, labels.int())]
 
-    mse_loss = metrics.get_mse(labels, predictions)
-    acc = metrics.get_accuracy(labels, predictions, 0.5)
-    prec = metrics.precision(labels, predictions, 0.5)
-    sensitivity = metrics.sensitivity(labels, predictions,  0.5)
-    specificity = metrics.specificity(labels, predictions, 0.5)
-    f1 = metrics.f_score(labels, predictions, 0.5)
-    mcc = metrics.mcc(labels, predictions,  0.5)
-    auroc = metrics.auroc(labels, predictions)
-    auprc = metrics.auprc(labels, predictions)
+    if debug:
+        print(f'MSE loss : {stats[0]}')
+        print(f'Accuracy : {stats[1]}')
+        print(f'precision: {stats[2]}')
+        print(f'Sensititvity : {stats[3]}')
+        print(f'specificity : {stats[4]}')
+        print(f'f-score : {stats[5]}')
+        #print(f'MCC : {stats[6]}')
+        print(f'AUROC: {stats[6]}')
+        print(f'AUPRC: {stats[7]}\n')
 
-
-    print(f'MSE loss : {mse_loss}')
-    print(f'Accuracy : {acc}')
-    print(f'precision: {prec}')
-    print(f'Sensititvity :{sensitivity}')
-    print(f'specificity : {specificity}')
-    print(f'f-score : {f1}')
-    print(f'MCC : {mcc}')
-    print(f'AUROC: {auroc}')
-    print(f'AUPRC: {auprc}')
+    return stats
