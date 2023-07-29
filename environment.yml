@@ -1,4 +1,4 @@
-name: gnn4chem2
+name: gnn4chem
 channels:
   - defaults
 dependencies:
