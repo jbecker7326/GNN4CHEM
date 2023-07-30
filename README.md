@@ -8,6 +8,16 @@ Project title: **Node Classification on Protein-Protein Interactions for Applica
 
 The purpose of this project is to explore and advance Graph Neural Network (GNN) architectures to make multi-label predictions on the nodes of Protein-Protein Interactions (PPIs). By testing existing GNN layer types in different architectures and comparing against benchmarks, our study found that a combination of Molecular Fingerprint Convolution (MFConv) and Graph Isomorphism Network (GIN) layers produced our best F-1 scores across validation and test data. This impressive result is analyzed from the theoretical perspective on both architectures in terms of discriminating power.
 
+### Final Results
+
+#### Learning Curves
+![combined learning curves](images/combined_learning_curve_ne8000_lr0.001_nj5.png)
+
+#### Final Model Architecture
+
+Our final model is a GNN combining MFConv and GIN, as shown in the diagram below:
+![architecture](images/MFCov+GIN.png)
+
 ## Code Use & Installation
 
 1. Download the repository from the GitHub link: https://github.gatech.edu/wwang674/GNN4CHEM
