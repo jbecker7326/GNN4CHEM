@@ -100,7 +100,7 @@ def main():
               'MF': 'models.JB_MF',
               'MF+Cluster': 'models.JB_ClusterMF',
               'MF+GIN': 'models.JB_MFGIN',
-              'MF+Transformer': 'models.JB_MFT',
+              'MF+Transformer': 'models.JB_MFTrans',
               'SAGE': 'models.GNN_GS'
              }
     
